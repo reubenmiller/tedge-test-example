@@ -2,16 +2,16 @@
 
 import pytest
 from pytest_c8y.models import Software
-from integration.fixtures.device_mgmt import DeviceManagement
+from integration.fixtures.device.device import Device
 
 APAMA_PLUGIN = "tedge-apama-plugin"
 
 
-@pytest.fixture(name="tedge")
-def tedge_fixture(tedge: DeviceManagement):
+@pytest.fixture(name="dut")
+def tedge_fixture(dut: Device):
     """APAMA device setup"""
     # install software
-    operation = tedge.software_management.install(
+    operation = dut.cloud.software_management.install(
         Software(
             name=APAMA_PLUGIN,
             url=(
@@ -24,10 +24,10 @@ def tedge_fixture(tedge: DeviceManagement):
     operation.assert_success()
 
     # yield to test
-    yield tedge
+    yield dut
 
     # remove software
-    operation = tedge.software_management.remove(
+    operation = dut.cloud.software_management.remove(
         Software(APAMA_PLUGIN),
     )
     operation.assert_success()
@@ -35,9 +35,9 @@ def tedge_fixture(tedge: DeviceManagement):
 
 @pytest.mark.skip("TODO")
 def test_apama_installation(
-    tedge: DeviceManagement,
+    dut: Device,
 ):
     """Custom APAMA application"""
-    operation = tedge.command.execute("tedge mqtt pub tedge/local_event ''")
+    operation = dut.command.execute("tedge mqtt pub tedge/local_event ''")
     operation.assert_success()
-    tedge.alarms.assert_count(type="test_alarm")
+    dut.cloud.alarms.assert_count(type="test_alarm")
