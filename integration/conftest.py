@@ -108,11 +108,15 @@ def tedge(device_mgmt: DeviceManagement, request, random_name: str):
             if has_meta_data:
                 file.write("--------------------- Test case ---------------------\n")
                 file.write(request.node.rep_call.longreprtext)
-                file.write("\n--------------------- Test case end ---------------------\n")
+                file.write(
+                    "\n--------------------- Test case end ---------------------\n"
+                )
 
                 file.write("\n--------------------- Log output ---------------------\n")
                 file.write(request.node.rep_call.caplog)
-                file.write("\n--------------------- Log output end ---------------------\n")
+                file.write(
+                    "\n--------------------- Log output end ---------------------\n"
+                )
 
             file.write("\n--------------------- Device logs ---------------------\n")
 
