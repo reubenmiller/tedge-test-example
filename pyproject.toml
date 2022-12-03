@@ -1,0 +1,45 @@
+
+[tool.pdm]
+[tool.pdm.dev-dependencies]
+dev = [
+    "pylint<3.0.0,>=2.14.4",
+    "black<23.0.0,>=22.6.0",
+]
+
+[tool.pdm.build]
+includes = []
+[build-system]
+requires = ["pdm-pep517>=1.0.0"]
+build-backend = "pdm.pep517.api"
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "--no-header --log-cli-level=INFO"
+testpaths = [
+    "integration",
+]
+markers = []
+
+[project]
+name = "tedge-example-inttests"
+version = "0.0.1"
+description = "Tedge plugin integration tests"
+authors = [
+    {name = "Reuben Miller", email = "reuben.d.miller@gmail.com"},
+]
+dependencies = [
+    "pytest<8.0.0,>=7.1.2",
+    "pytest-c8y @ git+https://github.com/reubenmiller/pytest-c8y.git@0.0.19",
+    "pytest-variables<3.0.0,>=2.0.0",
+    "pytest-cov<4.0.0,>=3.0.0",
+    "setuptools>=65.3.0",
+    "dataclass-wizard>=0.22.1",
+    "python-dotenv>=0.20.0",
+    "pydantic>=1.10.2",
+    "invoke>=1.7.3",
+    "docker>=6.0.1",
+]
+requires-python = ">=3.8,<4.0"
+license = {text = "MIT"}
+
+[project.urls]

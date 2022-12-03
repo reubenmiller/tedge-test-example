@@ -1,0 +1,2 @@
+[system]
+reboot = ["init", "6"]

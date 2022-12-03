@@ -1,0 +1,11 @@
+.env
+wordlist.txt
+.DS_Store
+.vscode/
+test-output.xml
+.venv/
+__pycache__/
+__pypackages__
+.pdm.toml
+.pytest_cache/
+test_output/
