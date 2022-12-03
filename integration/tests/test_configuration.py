@@ -20,9 +20,7 @@ def test_set_configuration(
     dut: Device,
 ):
     """get/set configuration using Cumulocity"""
-    dut.cloud.software_management.install(
-        Software(PLUGIN_NAME)
-    ).assert_success()
+    dut.cloud.software_management.install(Software(PLUGIN_NAME)).assert_success()
 
     config = (
         f"# Test configuration generated on {datetime.now().isoformat()}Z\n"
