@@ -4,8 +4,8 @@ from integration.fixtures.device.adapter import DeviceAdapter
 
 
 class Device:
-    """Device interfaces
-    """
+    """Device interfaces"""
+
     # pylint: disable=too-few-public-methods
     def __init__(self, adapter: DeviceAdapter, cloud: DeviceManagement = None) -> None:
         self.device = adapter
