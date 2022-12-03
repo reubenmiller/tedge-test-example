@@ -8,7 +8,9 @@ from docker.errors import APIError
 from pytest_c8y.utils import RandomNameGenerator
 from pytest_c8y.device_management import DeviceManagement
 from integration.fixtures.device_mgmt import CumulocityDeviceManagement
-from integration.fixtures.device import DockerDeviceFixture
+from integration.fixtures.docker.factory import DockerDeviceFactory
+from integration.fixtures.device.device import Device
+
 
 log = logging.getLogger()
 
@@ -38,10 +40,10 @@ def fixture_random_name(variables: dict) -> str:
     return "-".join([prefix, generator.random_name()])
 
 
-@pytest.fixture
-def tedge(device_mgmt: DeviceManagement, request, random_name: str):
+@pytest.fixture(name="dut")
+def device_under_test(device_mgmt: DeviceManagement, request, random_name: str):
     """Create a docker device to use for testing"""
-    device_factory = DockerDeviceFixture()
+    device_factory = DockerDeviceFactory()
 
     devices = {}
     device_sn = random_name
@@ -81,7 +83,11 @@ def tedge(device_mgmt: DeviceManagement, request, random_name: str):
         logging.info("DEVICE URL     : %s", mgmt_url)
         logging.info("-" * 60)
 
-    yield device_mgmt
+    dut = Device(
+        adapter=device,
+        cloud=device_mgmt,
+    )
+    yield dut
 
     try:
         test_result = ""

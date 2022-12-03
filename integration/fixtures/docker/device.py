@@ -7,6 +7,7 @@ import time
 import tarfile
 from datetime import datetime, timezone
 from docker.models.containers import Container
+from integration.fixtures.device.adapter import DeviceAdapter
 
 
 def convert_docker_timestamp(value: str) -> datetime:
@@ -35,18 +36,19 @@ def convert_docker_timestamp(value: str) -> datetime:
     return datetime.strptime(date, "%Y-%m-%dT%H:%M:%S%z")
 
 
-class DockerDeviceAdapter:
+class DockerDeviceAdapter(DeviceAdapter):
     """Docker Device"""
 
     # pylint: disable=too-many-public-methods
 
-    def __init__(self, name: str):
+    def __init__(self, name: str, device_id: str = None):
         self._name = name
         self._container = None
         self.simulator = None
         self._start_time = None
         self._test_start_time = datetime.now(timezone.utc)
         self._is_existing_device = False
+        super().__init__(name, device_id)
 
     @property
     def container(self) -> Container:
@@ -216,7 +218,7 @@ class DockerDeviceAdapter:
         """Get the device id
 
         Raises:
-            Exception: Cube id not found
+            Exception: Device id not found
 
         Returns:
             str: Device id
