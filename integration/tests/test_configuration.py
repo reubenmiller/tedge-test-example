@@ -1,7 +1,6 @@
 """Configuration plugin tests"""
 
 from datetime import datetime
-from pytest_c8y.compare import RegexPattern
 from pytest_c8y.models import Software, Configuration
 from integration.fixtures.device.device import Device
 
@@ -40,17 +39,10 @@ def test_set_configuration(
 
     # Event should have been created with an attachment
     events = dut.cloud.events.assert_count(
-        type=PLUGIN_NAME, after=dut.device.test_start_time
+        type=PLUGIN_NAME,
+        with_attachment=True,
+        after=dut.device.test_start_time,
+        max_matches=1,
     )
-    assert len(events) == 1, "Should be exactly 1 event"
-    event = events[0].to_json()
-    assert "c8y_IsBinary" in event
-    assert event["c8y_IsBinary"]["name"] == RegexPattern(r"^.+$")
-
-    # Download binary and verify contents
-    event_binary_url = (
-        dut.cloud.context.client.events.build_object_path(events[0].id) + "/binaries"
-    )
-    downloaded_file = dut.cloud.c8y.get_file(event_binary_url)
-    contents = downloaded_file.decode("utf8")
-    assert contents == config, "Configuration roundtrip should match"
+    dut.cloud.events.assert_attachment_info(events[0], expected_name_pattern=r"^.+$")
+    dut.cloud.events.assert_attachment(events[0].id, expected_contents=config)

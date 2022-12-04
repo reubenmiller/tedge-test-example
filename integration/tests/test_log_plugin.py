@@ -48,14 +48,14 @@ def test_get_log_file(
         )
         operation.assert_success()
 
-    # Update log file configuration
+    # Update log file configuration (to contain the dummy log type)
     with dut.cloud.binaries.new_binary("dummyfile", contents=PLUGIN_CONFIG) as ref:
         operation = dut.cloud.configuration.set_configuration(
             Configuration(type=PLUGIN_NAME, url=ref.url),
         )
         operation.assert_success()
 
-    # Create dummy file
+    # Create dummy log file target with contents
     code, _ = dut.device.execute_command(
         f"bash -c 'echo \"{LOG_CONTENTS}\"' > /var/log/dummy.log",
         shell=True,
@@ -76,23 +76,20 @@ def test_get_log_file(
     op_data = operation.assert_success().to_json()
     assert "file" in op_data["c8y_LogfileRequest"]
     assert op_data["c8y_LogfileRequest"]["file"] == RegexPattern(
-        r"^https://.*/event/events/\d+/binaries$"
-    )
+        r"^https://.+/event/events/\d+/binaries$"
+    ), "Expected operation to contain a link to the uploaded log file"
 
     # Event should have been created with an attachment
     events = dut.cloud.events.assert_count(
-        type=log_type, after=dut.device.test_start_time
+        type=log_type,
+        after=dut.device.test_start_time,
+        with_attachment=True,
+        max_matches=1,
     )
-    assert len(events) == 1, "Should be exactly 1 event"
-    event = events[0].to_json()
-    assert "c8y_IsBinary" in event
-    assert event["c8y_IsBinary"]["name"] == RegexPattern(r"^.+$")
+    dut.cloud.events.assert_attachment_info(events[0], expected_name_pattern=r"^.+$")
 
-    # Download binary and verify contents
-    event_binary_url = (
-        dut.cloud.context.client.events.build_object_path(events[0].id) + "/binaries"
-    )
-    downloaded_file = dut.cloud.c8y.get_file(event_binary_url)
-    contents = downloaded_file.decode("utf8")
+    # Check attachment
     expected_contents = f"filename: dummy.log\n{LOG_CONTENTS}\n"
-    assert contents == expected_contents, "Configuration roundtrip should match"
+    dut.cloud.events.assert_attachment(
+        events[0].id, expected_contents=expected_contents
+    )
