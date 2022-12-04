@@ -42,18 +42,14 @@ def test_get_log_file(
     log_type = "dummy-log"
 
     # Update configuration (to enable updating of the log file)
-    with dut.cloud.binaries.new_binary("dummyfile", contents=CONFIG_CONTENTS) as ref:
-        operation = dut.cloud.configuration.set_configuration(
-            Configuration(type=CONFIG_NAME, url=ref.url),
-        )
-        operation.assert_success()
+    dut.cloud.configuration.apply_and_wait(
+        Configuration(type=CONFIG_NAME), contents=CONFIG_CONTENTS
+    )
 
     # Update log file configuration (to contain the dummy log type)
-    with dut.cloud.binaries.new_binary("dummyfile", contents=PLUGIN_CONFIG) as ref:
-        operation = dut.cloud.configuration.set_configuration(
-            Configuration(type=PLUGIN_NAME, url=ref.url),
-        )
-        operation.assert_success()
+    dut.cloud.configuration.apply_and_wait(
+        Configuration(type=PLUGIN_NAME), contents=PLUGIN_CONFIG
+    )
 
     # Create dummy log file target with contents
     code, _ = dut.device.execute_command(
@@ -63,15 +59,12 @@ def test_get_log_file(
     assert code == 0
 
     # Request log file
-    operation = dut.cloud.create_operation(
-        description="Request log file type",
-        c8y_LogfileRequest={
-            "dateFrom": (datetime.now() - timedelta(hours=1)).isoformat() + "Z",
-            "dateTo": datetime.now().isoformat() + "Z",
-            "logFile": log_type,
-            "maximumLines": 1000,
-            "searchText": "",
-        },
+    operation = dut.cloud.logs.get_logfile(
+        type=log_type,
+        date_from=datetime.now() - timedelta(hours=1),
+        date_to=datetime.now(),
+        maximum_lines=1000,
+        search_text="",
     )
     op_data = operation.assert_success().to_json()
     assert "file" in op_data["c8y_LogfileRequest"]
