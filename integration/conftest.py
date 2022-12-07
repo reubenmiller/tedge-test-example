@@ -26,18 +26,35 @@ def fixture_device_mgmt(device_mgmt: DeviceManagement) -> CumulocityDeviceManage
     return mgmt
 
 
-@pytest.fixture(name="random_name")
+def generate_name(prefix: str = "STC") -> str:
+    """Generate a random name
+    """
+    generator = RandomNameGenerator()
+    return "-".join([prefix, generator.random_name()])
+
+
+@pytest.fixture(name="random_name", scope="function")
 def fixture_random_name(variables: dict) -> str:
     """Generate a random name
 
     Returns:
         str: Random name
     """
-    generator = RandomNameGenerator()
-    prefix = "STC"
-    if variables:
-        prefix = variables.get("PREFIX", "STC")
-    return "-".join([prefix, generator.random_name()])
+    return generate_name(prefix=variables.get("PREFIX", "STC"))
+
+
+@pytest.fixture(name="random_name_factory")
+def fixture_random_name_factory(variables: dict) -> str:
+    """Generate a random name
+
+    Returns:
+        Callable[[], str]: Random name factory
+    """
+
+    def generate():
+        return generate_name(prefix=variables.get("PREFIX", "STC"))
+
+    return generate
 
 
 @pytest.fixture(name="dut")
@@ -58,7 +75,7 @@ def device_under_test(device_mgmt: DeviceManagement, request, random_name: str):
     # install problems when systemd is not running (during the build stage)
     # But it also allows us to possibly customize which version is installed
     # for the test
-    exit_code, _ = device.execute_command("/demo/bootstrap.sh")
+    exit_code, _ = device.execute_command("/demo/bootstrap.sh", shell=True)
     assert exit_code == 0, "Bootstrap should not have any errors"
 
     devices[device_sn] = device
