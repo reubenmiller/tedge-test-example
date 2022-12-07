@@ -66,7 +66,7 @@ def usecontext(_c, context):
         "pattern": "Only include test where their names match the given pattern",
     }
 )
-def test(c, testenv=False, devenv=False, variables="", modules="", pattern=""):
+def test(c, testenv=False, devenv=False, variables="", modules="", pattern="", runs=1):
     """Run tests
 
     Examples
@@ -115,6 +115,10 @@ def test(c, testenv=False, devenv=False, variables="", modules="", pattern=""):
 
     if pattern:
         command.append(f"-k='{pattern}'")
+
+    if runs and runs > 1:
+        command.append("--flake-finder")
+        command.append(f"--flake-runs={int(runs)}")
 
     if env_file:
         load_dotenv(env_file)
