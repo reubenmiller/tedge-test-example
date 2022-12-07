@@ -27,8 +27,7 @@ def fixture_device_mgmt(device_mgmt: DeviceManagement) -> CumulocityDeviceManage
 
 
 def generate_name(prefix: str = "STC") -> str:
-    """Generate a random name
-    """
+    """Generate a random name"""
     generator = RandomNameGenerator()
     return "-".join([prefix, generator.random_name()])
 
