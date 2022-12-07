@@ -298,11 +298,11 @@ dependencies = [
 
 [[package]]
 name = "pytest-c8y"
-version = "0.0.26"
+version = "0.0.31"
 requires_python = ">=3.7.2,<4.0"
 git = "https://github.com/reubenmiller/pytest-c8y.git"
-ref = "0.0.26"
-revision = "c0e88cc4d6181ed2b9de2ba70d8bf84d45fe697d"
+ref = "0.0.31"
+revision = "4d89dd38f95a4ac76b71dc0e6bb7962ad7063bad"
 summary = "pytest plugin for Cumulocity IoT"
 dependencies = [
     "c8y-api<2.0,>=1.4",
@@ -324,6 +324,15 @@ summary = "Pytest plugin for measuring coverage."
 dependencies = [
     "coverage[toml]>=5.2.1",
     "pytest>=4.6",
+]
+
+[[package]]
+name = "pytest-flakefinder"
+version = "1.1.0"
+requires_python = ">=3.5"
+summary = "Runs tests multiple times to expose flakiness."
+dependencies = [
+    "pytest>=2.7.1",
 ]
 
 [[package]]
@@ -449,7 +458,7 @@ summary = "Module for decorators, wrappers and monkey patching."
 
 [metadata]
 lock_version = "4.0"
-content_hash = "sha256:e6bcefe67047605353f3a6df2faddb21a60a52394edfe1be2abb5af33f8130b5"
+content_hash = "sha256:3924bc4b59dde4b99e1c3607b4d2eedb87e3451ee41a6c4d479db2bd3d398926"
 
 [metadata.files]
 "astroid 2.12.13" = [
@@ -802,6 +811,10 @@ content_hash = "sha256:e6bcefe67047605353f3a6df2faddb21a60a52394edfe1be2abb5af33
 "pytest-cov 3.0.0" = [
     {url = "https://files.pythonhosted.org/packages/20/49/b3e0edec68d81846f519c602ac38af9db86e1e71275528b3e814ae236063/pytest_cov-3.0.0-py3-none-any.whl", hash = "sha256:578d5d15ac4a25e5f961c938b85a05b09fdaae9deef3bb6de9a6e766622ca7a6"},
     {url = "https://files.pythonhosted.org/packages/61/41/e046526849972555928a6d31c2068410e47a31fb5ab0a77f868596811329/pytest-cov-3.0.0.tar.gz", hash = "sha256:e7f0f5b1617d2210a2cabc266dfe2f4c75a8d32fb89eafb7ad9d06f6d076d470"},
+]
+"pytest-flakefinder 1.1.0" = [
+    {url = "https://files.pythonhosted.org/packages/33/8b/06787150d0fd0cbd3a8054262b56f91631c7778c1bc91bf4637e47f909ad/pytest_flakefinder-1.1.0-py2.py3-none-any.whl", hash = "sha256:741e0e8eea427052f5b8c89c2b3c3019a50c39a59ce4df6a305a2c2d9ba2bd13"},
+    {url = "https://files.pythonhosted.org/packages/ec/53/69c56a93ea057895b5761c5318455804873a6cd9d796d7c55d41c2358125/pytest-flakefinder-1.1.0.tar.gz", hash = "sha256:e2412a1920bdb8e7908783b20b3d57e9dad590cc39a93e8596ffdd493b403e0e"},
 ]
 "pytest-html 3.2.0" = [
     {url = "https://files.pythonhosted.org/packages/12/fb/243962e70fc04fa85b4d44b988d45f15f1bde02fd1024a911befe565c866/pytest-html-3.2.0.tar.gz", hash = "sha256:c4e2f4bb0bffc437f51ad2174a8a3e71df81bbc2f6894604e604af18fbe687c3"},
