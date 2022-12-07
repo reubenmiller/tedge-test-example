@@ -74,15 +74,15 @@ if ! tedge cert show >/dev/null 2>&1; then
 
     
     if [ -n "$C8Y_PASSWORD" ]; then
-        if command -v c8y >/dev/null 2>&1; then
-            echo "Uploading certificate to Cumulocity"
-            CERT_PATH=$(tedge config get device.cert.path)
-            c8y devicemanagement certificates create --file "$CERT_PATH" --autoRegistrationEnabled --name "$CERT_COMMON_NAME" --status ENABLED --force
-        else
-            echo "tedge does not support reading from stdin"
-            # echo -n "$C8Y_PASSWORD" | tedge cert upload c8y --user "$C8Y_USER"
-            exit 1
-        fi
+        echo "Uploading certificate to Cumulocity using tedge"
+        C8YPASS="$C8Y_PASSWORD" tedge cert upload c8y --user "$C8Y_USER"
+
+        # Alternative: upload cert using go-c8y-cli
+        # if command -v c8y >/dev/null 2>&1; then
+        #     echo "Uploading certificate to Cumulocity using c8y"
+        #     CERT_PATH=$(tedge config get device.cert.path)
+        #     c8y devicemanagement certificates create --file "$CERT_PATH" --autoRegistrationEnabled --name "$CERT_COMMON_NAME" --status ENABLED --force
+        # fi
     fi
 else
     echo "Certificate already exists"
