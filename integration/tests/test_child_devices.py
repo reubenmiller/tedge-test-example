@@ -7,7 +7,8 @@ from integration.fixtures.device.device import Device
 def test_child_device_registration(dut: Device, random_name_factory: str):
     """Register child devices"""
     child_name = random_name_factory()
-    time.sleep(2)
+    # TODO: Sleep is required due to delayed startup
+    time.sleep(5)
     code, _ = dut.device.execute_command(
         f"mkdir -p /etc/tedge/operations/c8y/{child_name}",
         shell=True,
@@ -36,11 +37,11 @@ def test_child_supported_operations(dut: Device, random_name_factory: str):
     dut.cloud.inventory.assert_contains_fragment_values(
         {
             "c8y_SupportedOperations": [
-                "c8y_DownloadConfigFile",
-                "c8y_LogfileRequest",
+                # "c8y_DownloadConfigFile",
+                # "c8y_LogfileRequest",
                 "c8y_Restart",
                 "c8y_SoftwareUpdate",
-                "c8y_UploadConfigFile",
+                # "c8y_UploadConfigFile",
             ]
         }
     )

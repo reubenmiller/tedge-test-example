@@ -38,6 +38,6 @@ def test_apama_installation(
     dut: Device,
 ):
     """Custom APAMA application"""
-    operation = dut.command.execute("tedge mqtt pub tedge/local_event ''")
+    operation = dut.cloud.command.execute("tedge mqtt pub tedge/local_event ''")
     operation.assert_success()
     dut.cloud.alarms.assert_count(type="test_alarm")
