@@ -45,3 +45,44 @@ def test_tedge_alarm(dut: Device, topic, payload):
         after=dut.device.test_start_time,
     )
     assert items
+
+
+@pytest.mark.parametrize(
+    "topic,payload",
+    [
+        pytest.param(
+            "tedge/alarms/critical/temperature_high_high",
+            '{"text": "Temperature is very high"}',
+            id="critical_alarm_without_timestamp",
+        ),
+    ],
+)
+def test_clear_tedge_alarm(dut: Device, topic, payload):
+    """Create then clear a tedge measurement via mqtt"""
+    dut.device.assert_command(f"tedge mqtt pub {topic} '{payload}'")
+    alarm = json.loads(payload)
+
+    items = dut.cloud.alarms.assert_count(
+        expected_text=alarm.get("text"),
+        type=topic.split("/")[-1],
+        severity=topic.split("/")[-2].upper(),
+        resolved=False,
+        max_matches=1,
+        after=dut.device.test_start_time,
+    )
+    assert items
+
+    dut.device.assert_command(f"tedge mqtt pub {topic} ''")
+
+    dut.cloud.alarms.assert_count(
+        expected_text=alarm.get("text"),
+        type=topic.split("/")[-1],
+        severity=topic.split("/")[-2].upper(),
+        resolved=False,
+        max_matches=0,
+        min_matches=0,
+        after=dut.device.test_start_time,
+    )
+
+    alarm = dut.cloud.alarms.assert_exists(items[0].id)
+    assert alarm.status == alarm.Status.CLEARED, "Alarm should be cleared"
