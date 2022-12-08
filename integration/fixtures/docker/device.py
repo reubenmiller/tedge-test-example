@@ -128,13 +128,14 @@ class DockerDeviceAdapter(DeviceAdapter):
         return self.container.stats(stream=False)
 
     def execute_command(
-        self, cmd: str, log_output: bool = True, **kwargs
+        self, cmd: str, log_output: bool = True, shell: bool = True, **kwargs
     ) -> Tuple[int, Any]:
         """Execute a command inside the docker container
 
         Args:
             cmd (str): Command to execute
             log_output (bool, optional): Log the stdout after the command has executed
+            shell (bool, optional): Execute the command in a shell
             **kwargs (Any, optional): Additional keyword arguments
 
         Raises:
@@ -143,7 +144,7 @@ class DockerDeviceAdapter(DeviceAdapter):
         Returns:
             Tuple[int, Any]: Docker command output (exit_code, output)
         """
-        if "shell" in kwargs and kwargs["shell"]:
+        if shell:
             cmd = ["/bin/bash", "-c", cmd]
 
         exit_code, output = self.container.exec_run(cmd)
@@ -157,6 +158,37 @@ class DockerDeviceAdapter(DeviceAdapter):
         else:
             logging.info("cmd: %s, exit code: %d", cmd, exit_code)
         return exit_code, output
+
+    def assert_command(
+        self, cmd: str, exp_exit_code: int = 0, log_output: bool = True, **kwargs
+    ) -> Any:
+        """Execute a command inside the docker container
+
+        Args:
+            cmd (str): Command to execute
+            log_output (bool, optional): Log the stdout after the command has executed
+            exp_exit_code (int, optional): Expected exit code, defaults to 0.
+                Ignored if set to None.
+            **kwargs (Any, optional): Additional keyword arguments
+
+        Raises:
+            Exception: Docker container not found error
+
+        Returns:
+            Any: Command output
+        """
+        exit_code, output = self.execute_command(cmd, log_output=log_output, **kwargs)
+
+        if exp_exit_code is not None:
+            cmd_snippet = cmd
+            if len(cmd_snippet) > 30:
+                cmd_snippet = cmd_snippet[0:30] + "..."
+
+            assert (
+                exit_code == exp_exit_code
+            ), f"`{cmd_snippet}` returned an unexpected exit code"
+
+        return output
 
     @property
     def name(self) -> str:

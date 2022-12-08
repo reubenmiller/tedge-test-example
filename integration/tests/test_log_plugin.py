@@ -52,11 +52,11 @@ def test_get_log_file(
     )
 
     # Create dummy log file target with contents
-    code, _ = dut.device.execute_command(
-        f"bash -c 'echo \"{LOG_CONTENTS}\"' > /var/log/dummy.log",
-        shell=True,
+    dut.device.assert_command(
+        f"""
+        echo "{LOG_CONTENTS}" > /var/log/dummy.log
+        """
     )
-    assert code == 0
 
     # Request log file
     operation = dut.cloud.logs.get_logfile(

@@ -74,10 +74,7 @@ def device_under_test(device_mgmt: DeviceManagement, request, random_name: str):
     # install problems when systemd is not running (during the build stage)
     # But it also allows us to possibly customize which version is installed
     # for the test
-    exit_code, _ = device.execute_command(
-        "/demo/bootstrap.sh", log_output=False, shell=True
-    )
-    assert exit_code == 0, "Bootstrap should not have any errors"
+    device.assert_command("/demo/bootstrap.sh", log_output=False, shell=True)
 
     devices[device_sn] = device
 

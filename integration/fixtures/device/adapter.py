@@ -56,20 +56,34 @@ class DeviceAdapter:
         return (datetime.now(timezone.utc) - self.start_time).total_seconds()
 
     def execute_command(
-        self, cmd: str, log_output: bool = True, **kwargs
+        self, cmd: str, log_output: bool = True, shell: bool = True, **kwargs
     ) -> Tuple[int, Any]:
         """Execute a command inside the docker container
 
         Args:
             cmd (str): Command to execute
             log_output (bool, optional): Log the stdout after the command has executed
+            shell (bool, optional): Execute the command in a shell
             **kwargs (Any, optional): Additional keyword arguments
-
-        Raises:
-            Exception: Docker container not found error
 
         Returns:
             Tuple[int, Any]: Docker command output (exit_code, output)
+        """
+        raise NotImplementedError()
+
+    def assert_command(
+        self, cmd: str, exp_exit_code: int = 0, log_output: bool = True, **kwargs
+    ) -> Any:
+        """Execute a command inside the docker container
+
+        Args:
+            cmd (str): Command to execute
+            log_output (bool, optional): Log the stdout after the command has executed
+            exp_exit_code (int, optional): Expected exit code, defaults to 0.
+            **kwargs (Any, optional): Additional keyword arguments
+
+        Returns:
+            Any: Command output
         """
         raise NotImplementedError()
 
