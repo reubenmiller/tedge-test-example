@@ -75,6 +75,13 @@ def device_under_test(device_mgmt: DeviceManagement, request, random_name: str):
     # But it also allows us to possibly customize which version is installed
     # for the test
     device.assert_command("/demo/bootstrap.sh", log_output=False, shell=True)
+    cert_fingerprint = (
+        device.assert_command(
+            "tedge cert show | grep '^Thumbprint:' | cut -d' ' -f2 | tr A-Z a-z"
+        )
+        .decode("utf8")
+        .strip()
+    )
 
     devices[device_sn] = device
 
@@ -145,5 +152,42 @@ def device_under_test(device_mgmt: DeviceManagement, request, random_name: str):
 
         log.info("Removing container")
         device.container.remove(force=True)
+
+        if cert_fingerprint:
+            try:
+                log.info(
+                    "Removing device certificate. fingerprint=%s", cert_fingerprint
+                )
+                dut.cloud.c8y.delete(
+                    (
+                        f"/tenant/tenants/{dut.cloud.c8y.tenant_id}"
+                        f"/trusted-certificates/{cert_fingerprint}"
+                    ),
+                )
+            except KeyError as ex:
+                log.error("Could not delete device certificate. ex=%s", ex)
+
+        # Cleanup device
+        try:
+            log.info(
+                "Removing managed object and child devices. id=%s",
+                dut.cloud.context.device_id,
+            )
+            dut.cloud.c8y.delete(
+                f"/inventory/managedObjects/{dut.cloud.context.device_id}",
+                params={
+                    "cascade": True,
+                    "withDeviceUser": False,
+                },
+            )
+
+            device_owner = f"device_{device_sn}"
+            log.info("Removing device certificate. user=%s", device_owner)
+            dut.cloud.c8y.delete(
+                f"/user/{dut.cloud.c8y.tenant_id}/users/{device_owner}"
+            )
+        except Exception as ex:
+            log.error("Could not delete device. %s", ex)
+
     except APIError as ex:
         log.error("Failed cleaning up the container. %s", ex)
