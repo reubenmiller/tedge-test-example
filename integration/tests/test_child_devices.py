@@ -13,9 +13,7 @@ def test_child_device_registration(dut: Device, random_name_factory: str):
         f"mkdir -p /etc/tedge/operations/c8y/{child_name}",
     )
     dut.cloud.inventory.assert_exists()
-
-    children = dut.cloud.inventory.assert_child_device_names(child_name, timeout=10)
-    assert len(children) > 0, "Expected at least 1 child device"
+    dut.cloud.inventory.assert_child_device_names(child_name, timeout=10)
 
 
 def test_child_supported_operations(dut: Device, random_name_factory: str):
