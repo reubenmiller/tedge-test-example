@@ -229,7 +229,7 @@ class DockerDeviceAdapter(DeviceAdapter):
         Returns:
             List[str]: List of log entries
         """
-        cmd = "journalctl --lines 100000 --no-pager -u 'tedge*' -u 'c8y*'"
+        cmd = "journalctl --lines 100000 --no-pager -u 'tedge*' -u 'c8y*' -u mosquitto"
 
         output = []
         if since:

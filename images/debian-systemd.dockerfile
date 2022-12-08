@@ -41,6 +41,9 @@ COPY bootstrap.sh .
 COPY files/system.toml /etc/tedge/
 COPY files/c8y-configuration-plugin.toml /etc/tedge/c8y/
 
+# Custom mosquitto config
+COPY files/mosquitto.conf /etc/mosquitto/conf.d/
+
 
 # Reference: https://developers.redhat.com/blog/2019/04/24/how-to-run-systemd-in-a-container#enter_podman
 # STOPSIGNAL SIGRTMIN+3 (=37)
