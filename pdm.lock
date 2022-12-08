@@ -298,11 +298,11 @@ dependencies = [
 
 [[package]]
 name = "pytest-c8y"
-version = "0.0.31"
+version = "0.0.33"
 requires_python = ">=3.7.2,<4.0"
 git = "https://github.com/reubenmiller/pytest-c8y.git"
-ref = "0.0.31"
-revision = "4d89dd38f95a4ac76b71dc0e6bb7962ad7063bad"
+ref = "0.0.33"
+revision = "a12b64cdf699798abc37eef5487cae1af08d07b4"
 summary = "pytest plugin for Cumulocity IoT"
 dependencies = [
     "c8y-api<2.0,>=1.4",
@@ -458,7 +458,7 @@ summary = "Module for decorators, wrappers and monkey patching."
 
 [metadata]
 lock_version = "4.0"
-content_hash = "sha256:3924bc4b59dde4b99e1c3607b4d2eedb87e3451ee41a6c4d479db2bd3d398926"
+content_hash = "sha256:503d29111be218ce583278c1424d3b9ee0b53818ea3d716c543d26c148f92e64"
 
 [metadata.files]
 "astroid 2.12.13" = [
