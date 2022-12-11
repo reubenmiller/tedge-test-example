@@ -9,3 +9,4 @@ __pypackages__
 .pdm.toml
 .pytest_cache/
 test_output/
+results/
