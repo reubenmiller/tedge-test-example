@@ -80,7 +80,7 @@ class DeviceLibrary:
         logger.info("Waiting for device to be ready")
         time.sleep(2)
 
-    @keyword("Start Device")
+    @keyword("Setup Device")
     def start(self) -> str:
         """Create a container device to use for testing
 

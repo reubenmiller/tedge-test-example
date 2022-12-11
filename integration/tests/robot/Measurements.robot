@@ -6,7 +6,7 @@ Test Teardown    Get Device Logs
 
 *** Test Cases ***
 Create a custom measurement
-    ${DEVICE_SN}=                       Start Device
+    ${DEVICE_SN}=                       Setup Device
     Wait For Device To Be Ready
     Execute Device Command              tedge mqtt pub tedge/measurements '{"temperature": 21.3}'
     Cumulocity.Device Should Exist      ${DEVICE_SN}
