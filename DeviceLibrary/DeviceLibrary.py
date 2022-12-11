@@ -1,7 +1,13 @@
 #!/usr/local/bin/python3
+"""Device Library for Robot Framework
+
+It enables the creation of devices which can be used in tests.
+It currently support the creation of Docker devices only
+"""
 
 import logging
 import time
+from typing import Any
 
 from docker.errors import APIError
 from pytest_c8y.utils import RandomNameGenerator
@@ -29,6 +35,7 @@ def generate_name(prefix: str = "STC") -> str:
 
 @library(scope="GLOBAL", auto_keywords=False)
 class DeviceLibrary:
+    """Device Library"""
 
     ROBOT_LISTENER_API_VERSION = 3
 
@@ -48,25 +55,38 @@ class DeviceLibrary:
         self.__image = image
         self.current = None
 
+        # pylint: disable=invalid-name
         self.ROBOT_LIBRARY_LISTENER = self
 
-    def _end_suite(self, data, result):
+    def _end_suite(self, _data: Any, result: Any):
         logger.info("Suite %s (%s) ending", result.name, result.message)
         self.teardown()
 
-    def end_test(self, data, result):
+    def end_test(self, _data: Any, result: Any):
+        """End test hook which is called by Robot Framework
+        when the test has ended
+
+        Args:
+            _data (Any): Test data
+            result (Any): Test details
+        """
         logger.info("Listener: detected end of test")
         if not result.passed:
             logger.info("Test '%s' failed: %s", result.name, result.message)
 
     @keyword("Wait For Device To Be Ready")
     def wait_for_ready(self):
+        """Wait for the device to be ready"""
         logger.info("Waiting for device to be ready")
         time.sleep(2)
 
     @keyword("Start Device")
     def start(self) -> str:
-        """Create a container device to use for testing"""
+        """Create a container device to use for testing
+
+        Returns:
+            str: Device serial number
+        """
         device_factory = DockerDeviceFactory()
 
         device_sn = generate_name()
@@ -110,6 +130,7 @@ class DeviceLibrary:
 
     @keyword("Stop Device")
     def teardown(self):
+        """Stop and cleanup the device"""
         for name, device in self.devices.items():
             logger.info("Stopping device: %s", name)
             self.destory_device(device)
@@ -135,6 +156,12 @@ class DeviceLibrary:
             print(line)
 
     def destory_device(self, dut: Device):
+        """Destroy the device by either removing the
+        container, or shutting down the ssh connection
+
+        Args:
+            dut (Device): Device under test
+        """
         try:
             # device = dut.device
             # device_sn = device.get_id()

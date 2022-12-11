@@ -15,6 +15,8 @@ from robot.running import TestSuiteBuilder
 
 
 class TestCasesFinder(SuiteVisitor):
+    """Test case finder"""
+
     def __init__(self):
         self.tests = []
 
@@ -23,6 +25,15 @@ class TestCasesFinder(SuiteVisitor):
 
 
 def find_tests(test_path: str) -> TestCasesFinder:
+    """Find tests in a given folder
+
+    Args:
+        test_path (str): Folder to search for tests in
+
+    Returns:
+        TestCasesFinder: Test case finder which contains
+            a list of all of the tests that were found
+    """
     builder = TestSuiteBuilder()
     testsuite = builder.build(test_path)
     finder = TestCasesFinder()
@@ -30,8 +41,10 @@ def find_tests(test_path: str) -> TestCasesFinder:
     return finder
 
 
-if __name__ == "__main__":
-
+def main():
+    """Main: Prompt the user for the tests to be run
+    then execute it
+    """
     options = {}
 
     # Get test dir (or explicit path to robot file)
@@ -60,3 +73,7 @@ if __name__ == "__main__":
         # path = testcase_model.source
 
     robot.run(str(path), **options)
+
+
+if __name__ == "__main__":
+    main()
