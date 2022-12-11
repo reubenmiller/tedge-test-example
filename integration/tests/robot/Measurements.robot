@@ -1,6 +1,6 @@
 *** Settings ***
 Library    Cumulocity
-Library    DeviceLibrary
+Library    ThinEdgeIO
 
 Test Teardown    Get Device Logs
 

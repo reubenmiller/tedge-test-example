@@ -8,6 +8,7 @@ It currently support the creation of Docker devices only
 import logging
 import time
 from typing import Any
+from datetime import datetime, timezone
 
 from docker.errors import APIError
 from pytest_c8y.utils import RandomNameGenerator
@@ -54,11 +55,31 @@ class DeviceLibrary:
         self.devices = {}
         self.__image = image
         self.current = None
+        self.test_start_time = None
 
         # pylint: disable=invalid-name
         self.ROBOT_LIBRARY_LISTENER = self
 
-    def _end_suite(self, _data: Any, result: Any):
+    def start_test(self, _data: Any, _result: Any):
+        """Hook which is triggered when the test starts
+
+        Store information about the running of the test
+        such as the time the test started.
+
+        Args:
+            _data (Any): Test case
+            _result (Any): Test case results
+        """
+        self.test_start_time = datetime.now(tz=timezone.utc)
+
+    def end_suite(self, _data: Any, result: Any):
+        """End suite hook which is called by Robot Framework
+        when the test suite has finished
+
+        Args:
+            _data (Any): Test data
+            result (Any): Test details
+        """
         logger.info("Suite %s (%s) ending", result.name, result.message)
         self.teardown()
 

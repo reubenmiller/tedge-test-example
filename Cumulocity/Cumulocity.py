@@ -55,8 +55,8 @@ class Cumulocity:
     DEFAULT_TIMEOUT = 30
 
     # Class-internal parameters
-    __device_mgmt: DeviceManagement = None
-    __live_c8y: CustomCumulocityApp = None
+    device_mgmt: DeviceManagement = None
+    c8y: CustomCumulocityApp = None
 
     # Constructor
     def __init__(
@@ -66,9 +66,9 @@ class Cumulocity:
         self.devices = {}
         load_dotenv()
 
-        self.__live_c8y = CustomCumulocityApp()
-        self.__device_mgmt = create_context_from_identity(self.__live_c8y)
-        self.__device_mgmt.configure_retries(timeout=timeout)
+        self.c8y = CustomCumulocityApp()
+        self.device_mgmt = create_context_from_identity(self.c8y)
+        self.device_mgmt.configure_retries(timeout=timeout)
 
     #
     # Alarms
@@ -87,7 +87,7 @@ class Cumulocity:
             List[str]: List of measurements as json
         """
         return self._convert_to_json(
-            self.__device_mgmt.alarms.assert_count(
+            self.device_mgmt.alarms.assert_count(
                 min_matches=minimum, expected_text=expected_text, **kwargs
             )
         )
@@ -103,7 +103,7 @@ class Cumulocity:
             str: Alarm json
         """
         return self._convert_to_json(
-            self.__device_mgmt.alarms.assert_exists(alarm_id, **kwargs)
+            self.device_mgmt.alarms.assert_exists(alarm_id, **kwargs)
         )
 
     #
@@ -130,7 +130,7 @@ class Cumulocity:
             List[str]: List of events as json
         """
         return self._convert_to_json(
-            self.__device_mgmt.events.assert_count(
+            self.device_mgmt.events.assert_count(
                 min_matches=minimum,
                 max_matches=maximum,
                 expected_text=expected_text,
@@ -164,7 +164,7 @@ class Cumulocity:
         Returns:
             bytes: Attachment
         """
-        return self.__device_mgmt.events.assert_attachment(
+        return self.device_mgmt.events.assert_attachment(
             event_id=event_id,
             encoding=encoding,
             expected_contents=expected_contents,
@@ -180,7 +180,7 @@ class Cumulocity:
         Args:
             event_id (str): Event id
         """
-        self.__device_mgmt.events.assert_no_attachment(
+        self.device_mgmt.events.assert_no_attachment(
             event_id=event_id,
             **kwargs,
         )
@@ -217,7 +217,7 @@ class Cumulocity:
         items = self._software_format_list(*expected_software_list)
 
         return self._convert_to_json(
-            self.__device_mgmt.software_management.assert_software_installed(
+            self.device_mgmt.software_management.assert_software_installed(
                 *items,
                 mo=mo,
                 **kwargs,
@@ -235,7 +235,7 @@ class Cumulocity:
             AssertOperation: Operation
         """
         items = self._software_format_list(*software_list)
-        operation = self.__device_mgmt.software_management.install(
+        operation = self.device_mgmt.software_management.install(
             *items,
             **kwargs,
         )
@@ -322,7 +322,7 @@ class Cumulocity:
         Args:
             fingerprint (str): Certificate fingerprint
         """
-        self.__device_mgmt.trusted_certificates.delete_certificate(
+        self.device_mgmt.trusted_certificates.delete_certificate(
             fingerprint,
             **kwargs,
         )
@@ -356,7 +356,7 @@ class Cumulocity:
         Args:
             timeout (float, optional): Timeout in seconds. Defaults to 30.
         """
-        self.__device_mgmt.configure_retries(timeout=timeout)
+        self.device_mgmt.configure_retries(timeout=timeout)
 
     #
     # Devices / Child devices
@@ -375,11 +375,11 @@ class Cumulocity:
             str: Managed object json
         """
 
-        identity = self.__device_mgmt.identity.assert_exists(external_id, external_type)
-        self.__device_mgmt.set_device_id(identity.id)
+        identity = self.device_mgmt.identity.assert_exists(external_id, external_type)
+        self.device_mgmt.set_device_id(identity.id)
 
         return self._convert_to_json(
-            self.__device_mgmt.inventory.assert_exists(identity.id),
+            self.device_mgmt.inventory.assert_exists(identity.id),
         )
 
     @keyword("Device Should Have Child Devices")
@@ -390,7 +390,7 @@ class Cumulocity:
             List[str]: List of child devices json
         """
         return self._convert_to_json(
-            self.__device_mgmt.inventory.assert_child_device_names(*name)
+            self.device_mgmt.inventory.assert_child_device_names(*name)
         )
 
     @keyword("Device Should Have Measurements")
@@ -408,12 +408,27 @@ class Cumulocity:
         """
         try:
             return self._convert_to_json(
-                self.__device_mgmt.measurements.assert_count(
+                self.device_mgmt.measurements.assert_count(
                     min_count=minimum, max_count=maximum, **kwargs
                 )
             )
         except AssertionError as ex:
             fail(f"not enough measurements were found. args={ex.args}")
+
+    @keyword("Delete Managed Object and Device User")
+    def delete_managed_object(
+        self, external_id: str, external_id_type: str = "c8y_Serial"
+    ):
+        """Delete managed object and related device user
+
+        Args:
+            external_id (str): External identity
+            external_id_type (str, optional): External identity type. Defaults to "c8y_Serial".
+        """
+        managed_object = self.device_mgmt.identity.assert_exists(
+            external_id, external_type=external_id_type
+        )
+        self.device_mgmt.inventory.delete_device_and_user(managed_object)
 
     @keyword("Device Should Have Fragments")
     def assert_contains_fragments(self, *fragments: str) -> str:
@@ -423,12 +438,15 @@ class Cumulocity:
             str: Managed object json
         """
         return self._convert_to_json(
-            self.__device_mgmt.inventory.assert_contains_fragments(fragments)
+            self.device_mgmt.inventory.assert_contains_fragments(fragments)
         )
 
     @keyword("Device Should Exist")
     def assert_device_exists(
-        self, external_id: str, external_type: str = "c8y_Serial"
+        self,
+        external_id: str,
+        external_type: str = "c8y_Serial",
+        show_info: bool = True,
     ) -> str:
         """Assert that a device exists by checking its external identity
 
@@ -439,24 +457,25 @@ class Cumulocity:
         Returns:
             str: Managed object json
         """
-        identity = self.__device_mgmt.identity.assert_exists(external_id, external_type)
-        self.__device_mgmt.set_device_id(identity.id)
+        identity = self.device_mgmt.identity.assert_exists(external_id, external_type)
+        self.device_mgmt.set_device_id(identity.id)
 
-        mgmt_url = "/".join(
-            [
-                self.__device_mgmt.c8y.base_url,
-                "apps/devicemanagement/index.html#/device",
-                identity.id,
-                "control",
-            ]
-        )
-        logger.info("-" * 60)
-        logger.info("DEVICE SERIAL  : %s", external_id)
-        logger.info("DEVICE ID      : %s", identity.id)
-        logger.info("DEVICE URL     : %s", mgmt_url)
-        logger.info("-" * 60)
+        if show_info:
+            mgmt_url = "/".join(
+                [
+                    self.device_mgmt.c8y.base_url,
+                    "apps/devicemanagement/index.html#/device",
+                    identity.id,
+                    "control",
+                ]
+            )
+            logger.info("-" * 60)
+            logger.info("DEVICE SERIAL  : %s", external_id)
+            logger.info("DEVICE ID      : %s", identity.id)
+            logger.info("DEVICE URL     : %s", mgmt_url)
+            logger.info("-" * 60)
 
-        return self._convert_to_json(self.__device_mgmt.inventory.assert_exists())
+        return self._convert_to_json(self.device_mgmt.inventory.assert_exists())
 
 
 if __name__ == "__main__":
