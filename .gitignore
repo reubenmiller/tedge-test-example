@@ -10,3 +10,6 @@ __pypackages__
 .pytest_cache/
 test_output/
 results/
+log.html
+report.html
+output.xml

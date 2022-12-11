@@ -1,43 +1,31 @@
 #!/usr/local/bin/python3
-#
-# A simple Robot Framework library example in Python
-# Author: Joerg Schultze-Lutter, 2022
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License along
-# with this program; if not, write to the Free Software Foundation, Inc.,
-# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-#
 
-from robot.api.deco import library, keyword, not_keyword
-from datetime import datetime
+import json
 import logging
-from pytest_c8y.device_management import DeviceManagement
+from typing import List, Union
+
+from dotenv import load_dotenv
+from pytest_c8y.assert_operation import AssertOperation
 from pytest_c8y.c8y import CustomCumulocityApp
 from pytest_c8y.device_management import DeviceManagement, create_context_from_identity
-from dotenv import load_dotenv
-
+from pytest_c8y.models import Software
+from robot.api.deco import keyword, library
+from robot.utils.asserts import fail
 
 logging.basicConfig(
     level=logging.DEBUG, format="%(asctime)s %(module)s -%(levelname)s- %(message)s"
 )
 logger = logging.getLogger(__name__)
 
-__version__ = "0.1.0"
+__version__ = "0.0.1"
 __author__ = "Reuben Miller"
 
-# Our demo class
-# We use Global scope along with Robot's
-# "auto_keywords" feature in disabled mode
+ASSERTION_MAPPING = {
+    "assert_count": "Device Should Have %s/s",
+    "assert_exists": "%s Should Exist",
+}
+
+
 @library(scope="GLOBAL", auto_keywords=False)
 class Cumulocity:
 
@@ -59,21 +47,173 @@ class Cumulocity:
         self.__live_c8y = CustomCumulocityApp()
         self.__device_mgmt = create_context_from_identity(self.__live_c8y)
         self.__device_mgmt.configure_retries(timeout=timeout)
-        # self.__device_mgmt = create_context_from_identity(live_c8y)
 
-        # self.__device_mgmt.alarms.assert_count.robot_name = "Assert Count"
-        # self.assert_count = keyword("Assert Count")(self.__device_mgmt.alarms.assert_count)
+    #
+    # Alarms
+    #
+    @keyword("Device Should Have Alarm/s")
+    def alarm_assert_count(self, minimum: int = 1, expected_text: str = None, **kwargs):
+        return self._convert_to_json(
+            self.__device_mgmt.alarms.assert_count(
+                min_matches=minimum, expected_text=expected_text, **kwargs
+            )
+        )
 
+    @keyword("Alarm Should Exist")
+    def alarm_assert_exist(self, alarm_id: str, **kwargs):
+        return self._convert_to_json(
+            self.__device_mgmt.alarms.assert_exists(alarm_id, **kwargs)
+        )
+
+    #
+    # Events
+    #
+    @keyword("Device Should Have Event/s")
+    def event_assert_count(
+        self,
+        expected_text: str = None,
+        with_attachment: bool = None,
+        minimum: int = 1,
+        maximum: int = None,
+        **kwargs,
+    ):
+        return self._convert_to_json(
+            self.__device_mgmt.events.assert_count(
+                min_matches=minimum,
+                max_matches=maximum,
+                expected_text=expected_text,
+                with_attachment=with_attachment,
+                **kwargs,
+            )
+        )
+
+    @keyword("Event Should Have An Attachment")
+    def event_assert_attachment(
+        self,
+        event_id: str,
+        expected_contents: str = None,
+        expected_pattern: str = None,
+        expected_size_min: int = None,
+        encoding: str = None,
+        **kwargs,
+    ):
+        return self._convert_to_json(
+            self.__device_mgmt.events.assert_attachment(
+                event_id=event_id,
+                encoding=encoding,
+                expected_contents=expected_contents,
+                expected_pattern=expected_pattern,
+                expected_size_min=expected_size_min,
+                **kwargs,
+            )
+        )
+
+    @keyword("Event Should Not Have An Attachment")
+    def event_assert_no_attachment(self, event_id: str, **kwargs):
+        return self._convert_to_json(
+            self.__device_mgmt.events.assert_no_attachment(
+                event_id=event_id,
+                **kwargs,
+            )
+        )
+
+    #
+    # Software
+    #
+    def _software_format_list(self, *items: str) -> List[Software]:
+        return [Software(*item.split(",", 3)) for item in items if item]
+
+    @keyword("Device Should Have Installed Software")
+    def software_assert_installed(
+        self, *expected_software_list: str, mo: str = None, **kwargs
+    ):
+        items = self._software_format_list(*expected_software_list)
+
+        return self._convert_to_json(
+            self.__device_mgmt.software_management.assert_software_installed(
+                *items,
+                mo=mo,
+                **kwargs,
+            )
+        )
+
+    @keyword("Install Software")
+    def software_install(self, *software_list: str, **kwargs):
+        items = self._software_format_list(*software_list)
+        operation = self.__device_mgmt.software_management.install(
+            *items,
+            **kwargs,
+        )
+        return operation
+
+    #
+    # Operations
+    #
+    @keyword("Operation Should Be SUCCESSFUL")
+    def operation_assert_success(self, operation: AssertOperation, **kwargs):
+        return self._convert_to_json(operation.assert_success(**kwargs))
+
+    @keyword("Operation Should Be PENDING")
+    def operation_assert_pending(self, operation: AssertOperation, **kwargs):
+        return self._convert_to_json(operation.assert_pending(**kwargs))
+
+    @keyword("Operation Should Not Be PENDING")
+    def operation_assert_not_pending(self, operation: AssertOperation, **kwargs):
+        return self._convert_to_json(operation.assert_not_pending(**kwargs))
+
+    @keyword("Operation Should Be DONE")
+    def operation_assert_done(self, operation: AssertOperation, **kwargs):
+        return self._convert_to_json(operation.assert_done(**kwargs))
+
+    @keyword("Operation Should Be FAILED")
+    def operation_assert(
+        self, operation: AssertOperation, failure_reason: str = ".+", **kwargs
+    ):
+        return self._convert_to_json(
+            operation.assert_failed(failure_reason=failure_reason, **kwargs)
+        )
+
+    #
+    # Trusted Certificates
+    #
+    @keyword("Delete Device Certificate From Platform")
+    def trusted_certificate_delete(self, fingerprint: str, **kwargs):
+        """Delete the trusted certificate from the platform
+
+        Args:
+            fingerprint (str): Certificate fingerprint
+        """
+        self.__device_mgmt.trusted_certificates.delete_certificate(
+            fingerprint,
+            **kwargs,
+        )
+
+    def _convert_item(self, item: any) -> str:
+        if not item:
+            return ""
+
+        data = item
+        if item and hasattr(item, "to_json"):
+            data = item.to_json()
+
+        return json.dumps(data)
+
+    def _convert_to_json(self, item: any) -> Union[str, List[str]]:
+        if isinstance(item, list):
+            return [self._convert_item(subitem) for subitem in item]
+
+        return self._convert_item(item)
+
+    #
+    # Library settings
+    #
     @keyword("Set API Timeout")
     def set_timeout(self, timeout: float = 30):
         self.__device_mgmt.configure_retries(timeout=timeout)
 
-    @keyword("Device Should Have Alarm/s")
-    def assert_count(self, min_matches: int = 1, expected_text: str = None, **kwargs):
-        self.__device_mgmt.alarms.assert_count(
-            min_matches=min_matches, expected_text=expected_text, **kwargs
-        )
-
+    #
+    # Devices / Child devices
+    #
     @keyword("Set Device")
     def set_device(self, external_id: str = None, external_type: str = "c8y_Serial"):
         identity = self.__device_mgmt.identity.assert_exists(external_id, external_type)
@@ -84,19 +224,39 @@ class Cumulocity:
         return self.__device_mgmt.inventory.assert_child_device_names(*name)
 
     @keyword("Device Should Have Measurements")
-    def assert_measurement_count(self, min_count: int = 1, **kwargs):
-        return self.__device_mgmt.measurements.assert_count(
-            min_count=min_count, **kwargs
-        )
+    def assert_measurement_count(self, minimum: int = 1, maximum: int = None, **kwargs):
+        try:
+            return self._convert_to_json(
+                self.__device_mgmt.measurements.assert_count(
+                    min_count=minimum, max_count=maximum, **kwargs
+                )
+            )
+        except AssertionError as ex:
+            fail(f"not enough measurements were found. args={ex.args}")
 
     @keyword("Device Should Have Fragments")
-    def assert_contains_framgnets(self, *fragments: str):
+    def assert_contains_fragments(self, *fragments: str):
         return self.__device_mgmt.inventory.assert_contains_fragments(fragments)
 
     @keyword("Device Should Exist")
     def assert_device_exists(self, external_id: str, external_type: str = "c8y_Serial"):
         identity = self.__device_mgmt.identity.assert_exists(external_id, external_type)
         self.__device_mgmt.set_device_id(identity.id)
+
+        mgmt_url = "/".join(
+            [
+                self.__device_mgmt.c8y.base_url,
+                "apps/devicemanagement/index.html#/device",
+                identity.id,
+                "control",
+            ]
+        )
+        logger.info("-" * 60)
+        logger.info("DEVICE SERIAL  : %s", external_id)
+        logger.info("DEVICE ID      : %s", identity.id)
+        logger.info("DEVICE URL     : %s", mgmt_url)
+        logger.info("-" * 60)
+
         return self.__device_mgmt.inventory.assert_exists()
 
 
