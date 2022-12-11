@@ -382,7 +382,7 @@ class Cumulocity:
             self.device_mgmt.inventory.assert_exists(identity.id),
         )
 
-    @keyword("Device Should Have Child Devices")
+    @keyword("Device Should Have A Child Devices")
     def assert_child_device_names(self, *name: str) -> List[str]:
         """Assert the presence of child devices and their matching names
 
@@ -439,6 +439,22 @@ class Cumulocity:
         """
         return self._convert_to_json(
             self.device_mgmt.inventory.assert_contains_fragments(fragments)
+        )
+
+    @keyword("Should Be A Child Device Of Device")
+    def assert_child_device_relationship(
+        self, external_id: str, external_id_type: str = "c8y_Serial"
+    ) -> str:
+        """Assert that a child device (referenced via external identity)
+        should be a child device of the current device context.
+
+        Returns:
+            str: Managed object json
+        """
+        return self._convert_to_json(
+            self.device_mgmt.inventory.assert_relationship(
+                external_id, external_id_type, child_type="childDevices"
+            )
         )
 
     @keyword("Device Should Exist")

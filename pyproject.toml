@@ -29,7 +29,7 @@ authors = [
 ]
 dependencies = [
     "pytest<8.0.0,>=7.1.2",
-    "pytest-c8y @ git+https://github.com/reubenmiller/pytest-c8y.git@0.0.38",
+    "pytest-c8y @ git+https://github.com/reubenmiller/pytest-c8y.git@0.0.39",
     "pytest-variables<3.0.0,>=2.0.0",
     "pytest-cov<4.0.0,>=3.0.0",
     "setuptools>=65.3.0",

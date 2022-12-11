@@ -101,6 +101,18 @@ class DeviceLibrary:
         logger.info("Waiting for device to be ready")
         time.sleep(2)
 
+    @keyword("Get Random Name")
+    def get_random_name(self, prefix: str = "STC") -> str:
+        """Get random name
+
+        Args:
+            prefix (str, optional): Name prefix. Defaults to "STC".
+
+        Returns:
+            str: Random name
+        """
+        return generate_name(prefix)
+
     @keyword("Setup Device")
     def start(self) -> str:
         """Create a container device to use for testing
