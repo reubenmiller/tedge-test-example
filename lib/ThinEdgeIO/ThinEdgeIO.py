@@ -8,7 +8,7 @@ import logging
 import json
 from typing import Any
 
-from pytest_c8y.utils import RandomNameGenerator
+from c8y_test_core.utils import RandomNameGenerator
 from robot.api.deco import keyword, library
 from DeviceLibrary import DeviceLibrary
 from Cumulocity import Cumulocity
@@ -130,6 +130,31 @@ class ThinEdgeIO(DeviceLibrary):
             .decode("utf8")
             .strip()
         )
-        c8y_lib.trusted_certificate_delete(fingerprint)
-        device_sn = self.current.device.get_id()
-        c8y_lib.delete_managed_object(device_sn)
+        if fingerprint:
+            c8y_lib.trusted_certificate_delete(fingerprint)
+
+            device_sn = self.current.device.get_id()
+            c8y_lib.delete_managed_object(device_sn)
+
+    @keyword("Download From GitHub")
+    def install_from_github(self, *run_id: str, arch: str = "aarch64"):
+        self.execute_command("""
+            type -p curl >/dev/null || sudo apt install curl -y
+            curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg \
+            && sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg \
+            && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
+            && sudo apt update \
+            && sudo apt install gh -y
+        """.lstrip())
+
+        run_ids = []
+        # Also support providing values via csv (e.g. when set from variables)
+        for i_run_id in run_id:
+            run_ids.extend(i_run_id.split(","))
+
+        for i_run_id in run_ids:            
+            self.execute_command(f"""
+                gh run download {i_run_id} -n debian-packages-{arch}-unknown-linux-gnu -R thin-edge/thin-edge.io
+            """.strip())
+
+    # def login(self):

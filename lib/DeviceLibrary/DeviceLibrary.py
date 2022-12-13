@@ -114,7 +114,7 @@ class DeviceLibrary:
         return generate_name(prefix)
 
     @keyword("Setup Device")
-    def start(self) -> str:
+    def start(self, skip_bootstrap: bool = False) -> str:
         """Create a container device to use for testing
 
         Returns:
@@ -133,7 +133,9 @@ class DeviceLibrary:
         # install problems when systemd is not running (during the build stage)
         # But it also allows us to possibly customize which version is installed
         # for the test
-        device.assert_command("/demo/bootstrap.sh", log_output=True, shell=True)
+        if not skip_bootstrap:
+            device.assert_command("/demo/bootstrap.sh", log_output=True, shell=True)
+
         self.devices[device_sn] = device
 
         dut = Device(
