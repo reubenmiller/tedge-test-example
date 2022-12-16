@@ -50,7 +50,8 @@ def main():
     # Get test dir (or explicit path to robot file)
     path = Path(__file__).parent.resolve()
     if len(sys.argv) > 1:
-        path = sys.argv[1]
+        if sys.argv[1].lower().endswith(".robot"):
+            path = sys.argv[1]
 
     # Find test files, and build a lookup list
     testcases = {item.longname: item for item in find_tests(path).tests}

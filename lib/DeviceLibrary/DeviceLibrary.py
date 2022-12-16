@@ -147,7 +147,7 @@ class DeviceLibrary:
         self.current = dut
         return device_sn
 
-    @keyword("Execute Device Command")
+    @keyword("Execute Command On Device")
     def execute_command(
         self, cmd: str, exp_exit_code: int = 0, log_output: bool = True
     ) -> str:
@@ -198,24 +198,247 @@ class DeviceLibrary:
             dut (Device): Device under test
         """
         try:
-            # device = dut.device
-            # device_sn = device.get_id()
-            # cert_fingerprint = (
-            #     device.assert_command(
-            #         "tedge cert show | grep '^Thumbprint:' | cut -d' ' -f2 | tr A-Z a-z"
-            #     )
-            #     .decode("utf8")
-            #     .strip()
-            # )
-            # Cleanup cloud device
-            # if cert_fingerprint:
-            #     dut.cloud.trusted_certificates.delete_certificate(cert_fingerprint)
-            # dut.cloud.inventory.delete_device_and_user(managed_object)
-
             log.info("Removing container")
             dut.device.container.remove(force=True)
         except APIError as ex:
             log.error("Failed cleaning up the container. %s", ex)
+
+    @keyword("Transfer To Device")
+    def transfer_to_device(self, src: str, dst: str):
+        """Transfer files to a device
+
+        Args:
+            src (str): Source file, folder or pattern
+            dst (str): Destination path to copy to the files to
+        """
+        self.current.device.copy_to(src, dst)
+
+    # ----------------------------------------------------
+    # Operation system
+    # ----------------------------------------------------
+    #
+    # APT
+    #
+    @keyword("Update APT Cache")
+    def apt_update(self) -> str:
+        """Update APT package cache
+
+        Returns:
+            str: Command output
+        """
+        return self.current.device.assert_command("apt-get update").decode("utf8")
+
+    @keyword("Install Package Using APT")
+    def apt_install(self, *packages: str):
+        """Install a list of packages via APT
+
+        You can specify specify to install the latest available, or use
+        a specific version
+
+        Args:
+            *packages (str): packages to be installed. Version is optional, but when
+            provided it should be in the format of 'mypackage=1.0.0'
+
+        Returns:
+            str: Command output
+        """
+        return self.current.device.assert_command(
+            "apt-get -y install " + " ".join(packages)
+        ).decode("utf8")
+
+    @keyword("Remove Package Using APT")
+    def apt_remove(self, *packages: str) -> str:
+        """Remove a package via APT
+
+        Returns:
+            str: Command output
+        """
+        return self.current.device.assert_command(
+            "apt-get -y remove " + " ".join(packages)
+        ).decode("utf8")
+
+    @keyword("Purge Package Using APT")
+    def apt_purge(self, *packages: str) -> str:
+        """Purge a package (and its configuration) using APT
+
+        Args:
+            *packages (str): packages to be installed
+
+        Returns:
+            str: Command output
+        """
+        return self.current.device.assert_command(
+            "apt-get -y remove " + " ".join(packages)
+        ).decode("utf8")
+
+    #
+    # Files/folders
+    #
+    @keyword("Directory Should Be Empty On Device")
+    def assert_directory_empty(self, path: str):
+        """Check if a directory is empty
+
+        Args:
+            path (str): Directory path
+        """
+        self.current.device.assert_command(f"""
+            [ -d '{path}' ] && [ -z "$(ls -A '{path}')" ]
+        """.strip())
+
+    @keyword("Directory Should Not Be Empty On Device")
+    def assert_directory_not_empty(self, path: str):
+        """Check if a directory is empty
+
+        Args:
+            path (str): Directory path
+        """
+        self.current.device.assert_command(f"""
+            [ -d '{path}' ] && [ -n "$(ls -A '{path}')" ]
+        """.strip())
+
+    @keyword("Directory Should Exist on Device")
+    def assert_directory(self, path: str):
+        """Check if a directory exists
+
+        Args:
+            path (str): Directory path
+        """
+        self.current.device.assert_command(f"test -d '{path}'")
+
+    @keyword("Directory Should Not Exist on Device")
+    def assert_not_directory(self, path: str):
+        """Check if a directory does not exists
+
+        Args:
+            path (str): Directory path
+        """
+        self.current.device.assert_command(f"! test -d '{path}'")
+
+    @keyword("File Should Exist on Device")
+    def assert_file_exists(self, path: str):
+        """Check if a file exists
+
+        Args:
+            path (str): File path
+        """
+        self.current.device.assert_command(f"test -f '{path}'")
+
+    @keyword("File Should Not Exist on Device")
+    def assert_not_file_exists(self, path: str):
+        """Check if a file does not exists
+
+        Args:
+            path (str): File path
+        """
+        self.current.device.assert_command(f"! test -f '{path}'")
+
+    @keyword("Start Service")
+    def start_service(self, name: str, init_system: str = "systemd"):
+        """Start a service
+
+        Args:
+            path (str): File path
+        """
+        self._control_service("start", name, init_system=init_system)
+
+    @keyword("Stop Service")
+    def stop_service(self, name: str, init_system: str = "systemd"):
+        """Stop a service
+
+        Args:
+            path (str): File path
+        """
+        self._control_service("stop", name, init_system=init_system)
+
+    @keyword("Restart Service")
+    def restart_service(self, name: str, init_system: str = "systemd"):
+        """Restart a service
+
+        Args:
+            path (str): File path
+        """
+        self._control_service("restart", name, init_system=init_system)
+
+    @keyword("Reload Services Manager")
+    def reload_services_manager(self, init_system: str = "systemd"):
+        """Reload the services manager
+        For systemd this would be a systemctl daemon-reload
+        """
+        # self._control_service("reload", "", init_system=init_system)
+        raise NotImplementedError()
+
+    def _control_service(self, action: str, name: str, init_system: str = "systemd"):
+        """Check if a file does not exists
+
+        Args:
+            path (str): File path
+        """
+        init_system = init_system.lower()
+        action = "start"
+
+        if init_system == "systemd":
+            command = f"systemctl {action} {name}"
+        elif init_system == "sytemv":
+            command = f"systemctl {action} {name}"
+
+        self.current.device.assert_command(command)
+
+
+    #
+    # Processes
+    #
+    def _count_processes(self, pattern: str) -> int:
+        _, output = self.current.device.execute_command(
+            f"pgrep --count -fa '{pattern}' || true"
+        )
+        count = output.decode("utf8").strip()
+        return int(count)
+
+    @keyword("Process Should Be Running On Device")
+    def assert_process_exists(self, pattern: str):
+        """Check if at least 1 process is running given a pattern
+
+        Args:
+            pattern (str): Process pattern (passed to pgrep -fa '<pattern>')
+        """
+        self.current.device.assert_command(f"pgrep -fa '{pattern}'")
+
+    @keyword("Process Should Not Be Running On Device")
+    def assert_process_not_exists(self, pattern: str):
+        """Check that there are no processes matching a given pattern
+
+        Args:
+            pattern (str): Process pattern (passed to pgrep -fa '<pattern>')
+        """
+        count = self._count_processes(pattern)
+        assert count == 0, f"No processes should have matched. got {count}"
+
+    @keyword("Should Match Processes on Device")
+    def assert_process_count(
+        self, pattern: str, minimum: int = 1, maximum: int = None
+    ) -> int:
+        """Check how many processes are running which match a given pattern
+
+        Args:
+            pattern (str): Process pattern (passed to pgrep -fa '<pattern>')
+            minimum (int, optional): Minimum number of matches. Defaults to 1.
+            maximum (int, optional): Maximum number of matches. Defaults to None.
+
+        Returns:
+            int: Count of matching processes
+        """
+        count = self._count_processes(pattern)
+        if minimum is not None:
+            assert (
+                count >= minimum
+            ), f"Expected process count to be greater than or equal to {minimum}, got {count}"
+
+        if maximum is not None:
+            assert (
+                count <= maximum
+            ), f"Expected process count to be less than or equal to {maximum}, got {count}"
+
+        return count
 
 
 if __name__ == "__main__":

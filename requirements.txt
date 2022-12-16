@@ -1,7 +1,7 @@
 # Robot
 robotframework~=6.0.0
 python-dotenv>=0.20.0
-robotframework-c8y @ git+https://github.com/reubenmiller/robotframework-c8y.git@0.0.7
+robotframework-c8y @ git+https://github.com/reubenmiller/robotframework-c8y.git@0.0.8
 robotframework-debuglibrary>=2.3.0
 inquirer>=3.0.0
 

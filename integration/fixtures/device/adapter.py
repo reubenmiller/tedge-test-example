@@ -146,3 +146,12 @@ class DeviceAdapter:
 
     def cleanup(self):
         """Cleanup the device. This will be called when the define is no longer needed"""
+
+    def copy_to(self, src: str, dst: str):
+        """Copy file to the device
+
+        Args:
+            src (str): Source file (on host)
+            dst (str): Destination (in container)
+        """
+        raise NotImplementedError()

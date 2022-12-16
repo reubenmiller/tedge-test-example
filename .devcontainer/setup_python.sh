@@ -18,6 +18,8 @@ echo "Creating .pth file for workspace: $SITE_LIB/workspace.pth"
 # Add one path per line
 cat << EOT > "$SITE_LIB/workspace.pth"
 $PROJECT_DIR
+$PROJECT_DIR/src
+$PROJECT_DIR/lib
 EOT
 
 popd >/dev/null || exit 1

@@ -7,6 +7,7 @@ It currently support the creation of Docker devices only
 import logging
 import json
 from typing import Any
+import time
 
 from c8y_test_core.utils import RandomNameGenerator
 from robot.api.deco import keyword, library
@@ -138,23 +139,78 @@ class ThinEdgeIO(DeviceLibrary):
 
     @keyword("Download From GitHub")
     def install_from_github(self, *run_id: str, arch: str = "aarch64"):
-        self.execute_command("""
+        self.execute_command(
+            """
             type -p curl >/dev/null || sudo apt install curl -y
             curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg \
             && sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg \
             && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
             && sudo apt update \
             && sudo apt install gh -y
-        """.lstrip())
+        """.lstrip()
+        )
 
         run_ids = []
         # Also support providing values via csv (e.g. when set from variables)
         for i_run_id in run_id:
             run_ids.extend(i_run_id.split(","))
 
-        for i_run_id in run_ids:            
-            self.execute_command(f"""
+        for i_run_id in run_ids:
+            self.execute_command(
+                f"""
                 gh run download {i_run_id} -n debian-packages-{arch}-unknown-linux-gnu -R thin-edge/thin-edge.io
-            """.strip())
+            """.strip()
+            )
 
-    # def login(self):
+    #
+    # Tedge commands
+    #
+    @keyword("Set Tedge Configuration Using CLI")
+    def tedge_update_settings(self, name: str, value: str) -> str:
+        """Update tedge settings via CLI (`tedge config set`)
+
+        Args:
+            name (str): Setting name to update
+            value (str): Value to be updated with
+
+        Returns:
+            str: Command output
+        """
+        return self.execute_command(f"tedge config set {name} {value}")
+
+    @keyword("Tedge Connect")
+    def tedge_connect(self, mapper: str = "c8y") -> str:
+        """Tedge connect a cloud
+
+        Args:
+            mapper (str, optional): Mapper name, e.g. c8y, az, etc. Defaults to "c8y".
+
+        Returns:
+            str: Command output
+        """
+        return self.execute_command(f"tedge connect {mapper}")
+
+    @keyword("Tedge Disonnect")
+    def tedge_disconnect(self, mapper: str = "c8y") -> str:
+        """Tedge connect a cloud
+
+        Args:
+            mapper (str, optional): Mapper name, e.g. c8y, az, etc. Defaults to "c8y".
+
+        Returns:
+            str: Command output
+        """
+        return self.execute_command(f"tedge disconnect {mapper}")
+
+    @keyword("Tedge Disconnect Then Connect")
+    def tedge_disconnect_connect(self, mapper: str = "c8y", sleep: float = 0.0):
+        """Tedge disconnect the connect a cloud
+
+        Args:
+            mapper (str, optional): Mapper name, e.g. c8y, az, etc. Defaults to "c8y".
+            sleep (float, optional): Time to wait in seconds before connecting. Defaults to 0.0.
+        """
+        self.tedge_disconnect(mapper)
+        if sleep > 0:
+            time.sleep(sleep)
+        self.tedge_connect(mapper)

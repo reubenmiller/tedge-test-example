@@ -123,10 +123,7 @@ class DockerDeviceFactory:
             "read_only": False,
             "mem_limit": "128m",
             "network": self._network.id,
-            "volumes": {
-                # Required when running as systemd service
-                "/sys/fs/cgroup": {"bind": "/sys/fs/cgroup", "mode": "ro"},
-            },
+            "volumes": {},
             "labels": {
                 "tedge.inttest": "1",
                 "tedge.device_id": device_id,

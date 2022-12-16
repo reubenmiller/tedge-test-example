@@ -1,13 +1,56 @@
 """Docker Device Simulator"""
 import os
 import logging
-from pathlib import Path
-from typing import List, Any, Tuple
+import glob
+import tempfile
+from typing import List, Any, Tuple, IO
 import time
 import tarfile
 from datetime import datetime, timezone
 from docker.models.containers import Container
 from integration.fixtures.device.adapter import DeviceAdapter
+
+
+log = logging.getLogger()
+
+
+def _parse_base_path_from_pattern(pattern: str) -> str:
+    output = []
+    parts = pattern.split(os.path.sep)
+    for part in parts:
+        if "*" in part:
+            break
+        output.append(part)
+
+    return os.path.sep.join(output)
+
+
+def make_tarfile(
+    fileobj: IO[bytes], patterns: List[str], compress: bool = False
+) -> int:
+    """Make a tar file given a list of patterns
+
+    If the file already exists the files will be appended to it.
+
+    Args:
+        file (str): Tar file where the files will be added to. It does not have to exist.
+        patterns (List[str]): List of glob patterns to be added to the tar file
+        compress (bool, optional): Use compression when creating tar (e.g. gzip)
+    """
+    total_files = 0
+    mode = "w:gz" if compress else "w"
+    with tarfile.open(fileobj=fileobj, mode=mode) as tar:
+        for pattern in patterns:
+            source_dir = _parse_base_path_from_pattern(pattern)
+
+            for match in glob.glob(pattern):
+                archive_path = match[len(source_dir) :].lstrip("/")
+                log.debug("Adding file: path=%s, archive_path=%s", match, archive_path)
+                tar.add(match, arcname=archive_path)
+                total_files += 1
+                # tar.add(source_dir, arcname=os.path.basename(source_dir))
+
+    return total_files
 
 
 def convert_docker_timestamp(value: str) -> datetime:
@@ -277,19 +320,30 @@ class DockerDeviceAdapter(DeviceAdapter):
             src (str): Source file (on host)
             dst (str): Destination (in container)
         """
-        abs_src = os.path.abspath(src)
-        owd = os.getcwd()
-        os.chdir(os.path.dirname(src))
-        src_name = os.path.basename(src)
+        try:
+            total_files = 0
+            archive_path = ""
 
-        with tarfile.open(abs_src + ".tar", mode="w") as tar:
-            tar.add(src_name)
+            # build archive
+            with tempfile.NamedTemporaryFile(
+                mode="wb", suffix=".tar", delete=False
+            ) as file:
+                total_files = make_tarfile(file, [src])
+                archive_path = file.name
 
-        data = Path(abs_src + ".tar").read_bytes()
-        self.container.put_archive(os.path.dirname(dst), data)
+            # put archive
+            with open(archive_path, "rb") as file:
+                if total_files > 1 or dst.endswith("/"):
+                    parent_dir = dst.rstrip("/") + "/"
+                else:
+                    parent_dir = os.path.dirname(dst)
 
-        os.remove(abs_src + ".tar")
-        os.chdir(owd)
+                code, _ = self.execute_command(f"mkdir -p {parent_dir}")
+                assert code == 0
+                self.container.put_archive(parent_dir, file)
+        finally:
+            if archive_path and os.path.exists(archive_path):
+                os.unlink(archive_path)
 
     def cleanup(self):
         """Cleanup the device. This will be called when the define is no longer needed"""

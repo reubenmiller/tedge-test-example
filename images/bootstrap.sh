@@ -4,18 +4,16 @@ set -e
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
-"$SCRIPT_DIR/install-tedge.sh" "script"
-
-echo ----------------------------------------------------------
-echo Bootstraping device
-echo ----------------------------------------------------------
-echo
-
 CONNECT=1
 CHILDREN=0
+INSTALL=1
 while [ $# -gt 0 ]
 do
     case "$1" in
+        --no-install)
+            INSTALL=0
+            ;;
+
         --no-connect)
             CONNECT=0
             ;;
@@ -28,6 +26,15 @@ do
     shift
 done
 
+if [ "$INSTALL" == 1 ]; then
+    echo "Installing thin-edge.io"
+    "$SCRIPT_DIR/install-tedge.sh" "script"
+fi
+
+echo ----------------------------------------------------------
+echo Bootstraping device
+echo ----------------------------------------------------------
+echo
 
 PREFIX=${PREFIX:-tedge}
 
