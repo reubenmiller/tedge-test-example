@@ -1,7 +1,7 @@
 """Measurement tests"""
 
 import pytest
-from integration.fixtures.device.device import Device
+from integration.fixtures.device import Device
 
 # pylint: disable=too-many-arguments
 

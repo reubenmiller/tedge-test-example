@@ -1,12 +1,12 @@
 """Custom Device Management fixture"""
 
 import logging
-from pytest_c8y.device_management import DeviceManagement
+from pytest_c8y.core import device_management
 
 log = logging.getLogger()
 
 
-class CumulocityDeviceManagement(DeviceManagement):
+class CumulocityDeviceManagement(device_management.DeviceManagement):
     """Cumulocity device management"""
 
     def delete_inventory(self, mo_id: str, cascade: bool = None, **params):

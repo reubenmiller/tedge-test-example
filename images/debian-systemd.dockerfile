@@ -4,9 +4,6 @@ ARG DEVICEID=tedge_alpine
 ARG C8YURL=mqtt.cumulocity.com
 ARG AZURL=example.azure-devices.net
 
-# Otherwise mosquitto fails
-VOLUME ["/sys/fs/cgroup"]
-
 # We need curl to get root certificates
 RUN apt-get -y update \
     && apt-get -y install \
@@ -21,10 +18,10 @@ RUN apt-get -y update \
         vim.tiny
 
 # Install additional tools
-RUN curl https://reubenmiller.github.io/go-c8y-cli-repo/debian/PUBLIC.KEY | gpg --dearmor > /usr/share/keyrings/go-c8y-cli-archive-keyring.gpg \
-    && echo 'deb [signed-by=/usr/share/keyrings/go-c8y-cli-archive-keyring.gpg] http://reubenmiller.github.io/go-c8y-cli-repo/debian stable main' > /etc/apt/sources.list.d/go-c8y-cli.list \
-    && apt-get update && export DEBIAN_FRONTEND=noninteractive \
-    && apt-get -y install --no-install-recommends go-c8y-cli
+# RUN curl https://reubenmiller.github.io/go-c8y-cli-repo/debian/PUBLIC.KEY | gpg --dearmor > /usr/share/keyrings/go-c8y-cli-archive-keyring.gpg \
+#     && echo 'deb [signed-by=/usr/share/keyrings/go-c8y-cli-archive-keyring.gpg] http://reubenmiller.github.io/go-c8y-cli-repo/debian stable main' > /etc/apt/sources.list.d/go-c8y-cli.list \
+#     && apt-get update && export DEBIAN_FRONTEND=noninteractive \
+#     && apt-get -y install --no-install-recommends go-c8y-cli
 
 # Remove unnecessary systemd services
 RUN rm -f /lib/systemd/system/multi-user.target.wants/* \
@@ -43,7 +40,6 @@ COPY files/c8y-configuration-plugin.toml /etc/tedge/c8y/
 
 # Custom mosquitto config
 COPY files/mosquitto.conf /etc/mosquitto/conf.d/
-
 
 # Reference: https://developers.redhat.com/blog/2019/04/24/how-to-run-systemd-in-a-container#enter_podman
 # STOPSIGNAL SIGRTMIN+3 (=37)

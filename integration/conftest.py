@@ -5,18 +5,19 @@ import os
 import logging
 import pytest
 from docker.errors import APIError
-from pytest_c8y.utils import RandomNameGenerator
-from pytest_c8y.device_management import DeviceManagement
-from integration.fixtures.device_mgmt import CumulocityDeviceManagement
-from integration.fixtures.docker.factory import DockerDeviceFactory
-from integration.fixtures.device.device import Device
 
+from pytest_c8y.core import device_management
+from device_test_core.docker.factory import DockerDeviceFactory
+from integration.fixtures.device_mgmt import CumulocityDeviceManagement
+from integration.fixtures.device import Device
 
 log = logging.getLogger()
 
 
 @pytest.fixture(name="device_mgmt", scope="session")
-def fixture_device_mgmt(device_mgmt: DeviceManagement) -> CumulocityDeviceManagement:
+def fixture_device_mgmt(
+    device_mgmt: device_management.DeviceManagement,
+) -> CumulocityDeviceManagement:
     """Provide a live CumulocityApi instance as defined by the environment.
     This fixture uses the device_mgmt fixture from pytest_c8y and extends via
     class inheritance
@@ -26,42 +27,12 @@ def fixture_device_mgmt(device_mgmt: DeviceManagement) -> CumulocityDeviceManage
     return mgmt
 
 
-def generate_name(prefix: str = "STC") -> str:
-    """Generate a random name"""
-    generator = RandomNameGenerator()
-    return "-".join([prefix, generator.random_name()])
-
-
-@pytest.fixture(name="random_name", scope="function")
-def fixture_random_name(variables: dict) -> str:
-    """Generate a random name
-
-    Returns:
-        str: Random name
-    """
-    return generate_name(prefix=variables.get("PREFIX", "STC"))
-
-
-@pytest.fixture(name="random_name_factory")
-def fixture_random_name_factory(variables: dict) -> str:
-    """Generate a random name
-
-    Returns:
-        Callable[[], str]: Random name factory
-    """
-
-    def generate():
-        return generate_name(prefix=variables.get("PREFIX", "STC"))
-
-    return generate
-
-
 @pytest.fixture(name="dut")
-def device_under_test(device_mgmt: DeviceManagement, request, random_name: str):
+def device_under_test(
+    device_mgmt: device_management.DeviceManagement, request, random_name: str
+):
     """Create a docker device to use for testing"""
     device_factory = DockerDeviceFactory()
-
-    devices = {}
     device_sn = random_name
 
     device = device_factory.create_device(
@@ -82,8 +53,6 @@ def device_under_test(device_mgmt: DeviceManagement, request, random_name: str):
         .decode("utf8")
         .strip()
     )
-
-    devices[device_sn] = device
 
     managed_object = device_mgmt.identity.assert_exists(device_sn, "c8y_Serial")
 

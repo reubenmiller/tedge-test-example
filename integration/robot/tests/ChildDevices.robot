@@ -1,4 +1,5 @@
 *** Settings ***
+Resource    ../resources/common.resource
 Library    Cumulocity
 Library    ThinEdgeIO
 

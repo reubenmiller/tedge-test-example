@@ -1,8 +1,8 @@
 """APAMA plugin tests"""
 
 import pytest
-from pytest_c8y.models import Software
-from integration.fixtures.device.device import Device
+from pytest_c8y.core import models
+from integration.fixtures.device import Device
 
 APAMA_PLUGIN = "tedge-apama-plugin"
 
@@ -12,7 +12,7 @@ def tedge_fixture(dut: Device):
     """APAMA device setup"""
     # install software
     operation = dut.cloud.software_management.install(
-        Software(
+        models.Software(
             name=APAMA_PLUGIN,
             url=(
                 "https://svndae.apama.com/apama_installers/Apama"
@@ -28,7 +28,7 @@ def tedge_fixture(dut: Device):
 
     # remove software
     operation = dut.cloud.software_management.remove(
-        Software(APAMA_PLUGIN),
+        models.Software(APAMA_PLUGIN),
     )
     operation.assert_success()
 

@@ -1,4 +1,4 @@
-"""Device Library for Robot Framework
+"""ThinEdgeIO Library for Robot Framework
 
 It enables the creation of devices which can be used in tests.
 It currently support the creation of Docker devices only
@@ -72,7 +72,7 @@ class ThinEdgeIO(DeviceLibrary):
         Args:
             name (str, optional): Device name to get logs for. Defaults to None.
         """
-        device_sn = name or self.current.device.get_id()
+        device_sn = name or self.current.get_id()
         try:
             managed_object = c8y_lib.device_mgmt.identity.assert_exists(device_sn)
             logger.info(
@@ -82,7 +82,7 @@ class ThinEdgeIO(DeviceLibrary):
 
             # Get agent log files (if they exist)
             logger.info("tedge agent logs: /var/log/tedge/agent/*")
-            self.current.device.execute_command(
+            self.current.execute_command(
                 "tail -n +1 /var/log/tedge/agent/* 2>/dev/null || true",
                 shell=True,
             )
@@ -134,7 +134,7 @@ class ThinEdgeIO(DeviceLibrary):
         if fingerprint:
             c8y_lib.trusted_certificate_delete(fingerprint)
 
-            device_sn = self.current.device.get_id()
+            device_sn = self.current.get_id()
             c8y_lib.delete_managed_object(device_sn)
 
     @keyword("Download From GitHub")

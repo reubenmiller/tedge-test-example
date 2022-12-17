@@ -1,9 +1,9 @@
 """Cumulocity log plugin tests"""
 
 from datetime import datetime, timedelta
-from pytest_c8y.compare import RegexPattern
-from pytest_c8y.models import Software, Configuration
-from integration.fixtures.device.device import Device
+from pytest_c8y.core import compare
+from pytest_c8y.core import models
+from integration.fixtures.device import Device
 
 PLUGIN_NAME = "c8y-log-plugin"
 PLUGIN_CONFIG = """
@@ -35,20 +35,20 @@ def test_get_log_file(
 ):
     """get a log file using Cumulocity"""
     dut.cloud.software_management.install(
-        Software(PLUGIN_NAME),
-        Software(CONFIG_NAME),
+        models.Software(PLUGIN_NAME),
+        models.Software(CONFIG_NAME),
     ).assert_success()
 
     log_type = "dummy-log"
 
     # Update configuration (to enable updating of the log file)
     dut.cloud.configuration.apply_and_wait(
-        Configuration(type=CONFIG_NAME), contents=CONFIG_CONTENTS
+        models.Configuration(type=CONFIG_NAME), contents=CONFIG_CONTENTS
     )
 
     # Update log file configuration (to contain the dummy log type)
     dut.cloud.configuration.apply_and_wait(
-        Configuration(type=PLUGIN_NAME), contents=PLUGIN_CONFIG
+        models.Configuration(type=PLUGIN_NAME), contents=PLUGIN_CONFIG
     )
 
     # Create dummy log file target with contents
@@ -68,7 +68,7 @@ def test_get_log_file(
     )
     op_data = operation.assert_success().to_json()
     assert "file" in op_data["c8y_LogfileRequest"]
-    assert op_data["c8y_LogfileRequest"]["file"] == RegexPattern(
+    assert op_data["c8y_LogfileRequest"]["file"] == compare.RegexPattern(
         r"^https://.+/event/events/\d+/binaries$"
     ), "Expected operation to contain a link to the uploaded log file"
 

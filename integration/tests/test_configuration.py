@@ -1,8 +1,8 @@
 """Configuration plugin tests"""
 
 from datetime import datetime
-from pytest_c8y.models import Software, Configuration
-from integration.fixtures.device.device import Device
+from pytest_c8y.core import models
+from integration.fixtures.device import Device
 
 PLUGIN_NAME = "c8y-configuration-plugin"
 PLUGIN_CONFIG = """
@@ -19,7 +19,7 @@ def test_set_configuration(
     dut: Device,
 ):
     """get/set configuration using Cumulocity"""
-    dut.cloud.software_management.install(Software(PLUGIN_NAME)).assert_success()
+    dut.cloud.software_management.install(models.Software(PLUGIN_NAME)).assert_success()
 
     config = (
         f"# Test configuration generated on {datetime.now().isoformat()}Z\n"
@@ -28,12 +28,12 @@ def test_set_configuration(
 
     with dut.cloud.binaries.new_binary("dummyfile", contents=config) as ref:
         operation = dut.cloud.configuration.set_configuration(
-            Configuration(type=PLUGIN_NAME, url=ref.url),
+            models.Configuration(type=PLUGIN_NAME, url=ref.url),
         )
         operation.assert_success()
 
     operation = dut.cloud.configuration.get_configuration(
-        Configuration(type=PLUGIN_NAME)
+        models.Configuration(type=PLUGIN_NAME)
     )
     operation.assert_success()
 

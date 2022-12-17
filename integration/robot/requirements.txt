@@ -5,14 +5,3 @@ robotframework-c8y @ git+https://github.com/reubenmiller/robotframework-c8y.git@
 robotframework-devicelibrary @ git+https://github.com/reubenmiller/robotframework-devicelibrary.git@0.0.1
 robotframework-debuglibrary>=2.3.0
 inquirer>=3.0.0
-
-# pytest
-pytest<8.0.0,>=7.1.2
-pytest-c8y @ git+https://github.com/reubenmiller/pytest-c8y.git@0.1.6
-pytest-variables<3.0.0,>=2.0.0
-pytest-cov<4.0.0,>=3.0.0
-setuptools>=65.3.0
-dataclass-wizard>=0.22.1
-invoke>=1.7.3
-docker>=6.0.1
-pytest-flakefinder>=1.1.0

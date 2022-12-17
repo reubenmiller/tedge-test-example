@@ -1,8 +1,8 @@
 """Command plugin tests"""
 
 import pytest
-from pytest_c8y.models import Software
-from integration.fixtures.device.device import Device
+from pytest_c8y.core import models
+from integration.fixtures.device import Device
 
 
 @pytest.mark.skip("Currently failing in versions <= 0.8.1")
@@ -11,7 +11,7 @@ def test_execute_shell_command(
 ):
     """Execute a custom command"""
     operation = dut.cloud.software_management.install(
-        Software(name="c8y-command-plugin"),
+        models.Software(name="c8y-command-plugin"),
         timeout=60,
     )
     operation.assert_success()

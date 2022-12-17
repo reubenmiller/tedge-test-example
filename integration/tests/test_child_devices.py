@@ -1,10 +1,11 @@
 """Cumulocity child device tests"""
 
 import time
-from integration.fixtures.device.device import Device
+from typing import Callable
+from integration.fixtures.device import Device
 
 
-def test_child_device_registration(dut: Device, random_name_factory: str):
+def test_child_device_registration(dut: Device, random_name_factory: Callable[[], str]):
     """Register child devices"""
     child_name = random_name_factory()
     # TODO: Sleep is required due to delayed startup
@@ -16,7 +17,9 @@ def test_child_device_registration(dut: Device, random_name_factory: str):
     dut.cloud.inventory.assert_child_device_names(child_name, timeout=10)
 
 
-def test_child_supported_operations(dut: Device, random_name_factory: str):
+def test_child_supported_operations(
+    dut: Device, random_name_factory: Callable[[], str]
+):
     """Register child devices with supported operations"""
     child_name = random_name_factory()
     time.sleep(5)
@@ -31,11 +34,11 @@ def test_child_supported_operations(dut: Device, random_name_factory: str):
     dut.cloud.inventory.assert_contains_fragment_values(
         {
             "c8y_SupportedOperations": [
-                # "c8y_DownloadConfigFile",
-                # "c8y_LogfileRequest",
+                "c8y_DownloadConfigFile",
+                "c8y_LogfileRequest",
                 "c8y_Restart",
                 "c8y_SoftwareUpdate",
-                # "c8y_UploadConfigFile",
+                "c8y_UploadConfigFile",
             ]
         }
     )

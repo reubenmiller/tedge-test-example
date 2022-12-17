@@ -20,6 +20,7 @@ cat << EOT > "$SITE_LIB/workspace.pth"
 $PROJECT_DIR
 $PROJECT_DIR/src
 $PROJECT_DIR/lib
+$PROJECT_DIR/integration/robot/libraries
 EOT
 
 popd >/dev/null || exit 1

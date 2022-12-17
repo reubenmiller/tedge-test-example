@@ -1,7 +1,7 @@
 """Restart tests"""
 
 import time
-from integration.fixtures.device.device import Device
+from integration.fixtures.device import Device
 
 
 def test_restart(dut: Device):

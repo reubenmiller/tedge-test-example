@@ -10,6 +10,9 @@ install_via_apt() {
 install_via_script() {
     apt-get update
     curl -fsSL https://raw.githubusercontent.com/thin-edge/thin-edge.io/main/get-thin-edge_io.sh | sudo sh -s
+
+    # Add testing repository to install other artifacts
+    echo 'deb [trusted=yes] https://thinedgeio.jfrog.io/artifactory/stable stable main' > /etc/apt/sources.list.d/tedge.list
 }
 
 case "$1" in

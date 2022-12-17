@@ -48,7 +48,8 @@ def main():
     options = {}
 
     # Get test dir (or explicit path to robot file)
-    path = Path(__file__).parent.resolve()
+
+    path = Path(__file__).parent.parent.resolve()
     if len(sys.argv) > 1:
         if sys.argv[1].lower().endswith(".robot"):
             path = sys.argv[1]
@@ -66,12 +67,12 @@ def main():
 
     answers = inquirer.prompt(questions)
 
+    if not answers:
+        sys.exit(0)
+
     testcase = answers.get("testcase", "")
     if testcase:
         options["test"] = testcase
-        # testcase_model = testcases.get(testcase)
-        # options["test"] = testcase_model.name
-        # path = testcase_model.source
 
     robot.run(str(path), **options)
 
